@@ -1,0 +1,16 @@
+# Build directories
+build/
+Build/
+
+# CMake user files
+CMakeLists.txt.user
+
+# Compiled object files
+*.o
+*.d
+
+# Binary executables
+app
+
+# CPU/temp files
+cpu.txt
