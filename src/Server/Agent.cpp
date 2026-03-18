@@ -28,7 +28,7 @@ CPU Agent::takeInfoCPU()
         }
     }
 
-    std::cout << result << std::endl;
+    // std::cout << result << std::endl;
     return infoCPU;
 
 }
@@ -72,7 +72,7 @@ std::vector<ActiveConnection> Agent::takeInfoConnection()
 {
     std::vector<ActiveConnection> activeConnections{};
 
-    std::string result = execCommand("netstat -tulpn");
+    std::string result = execCommand("netstat -tulpn 2>/dev/null");
 
     std::vector<std::string> lines = ManageString::splitString(result, '\n');
 
@@ -118,12 +118,73 @@ std::vector<ActiveConnection> Agent::takeInfoConnection()
 }
 
 
-std::string Agent::takeInfoProcess()
+std::vector<ProcessInfo> Agent::takeInfoProcess()
 {
-    std::string result = execCommand("top");
+    std::vector<ProcessInfo> processInfoVect{};
 
-    std::cout << result << std::endl;
+    std::string result = execCommand("ps aux --sort=-%cpu,-%mem | head -10");
 
+    std::vector<std::string> lines = ManageString::splitString(result, '\n');
+
+    for (int i = 1; i< lines.size(); i++)
+    {
+        ProcessInfo processInfo;
+
+        std::vector<std::string> line = ManageString::splitString(lines[i], ' ');
+        std::vector<std::string> lineFinal{};
+
+        for (const auto& element: line)
+        {
+            if (element != "")
+                lineFinal.push_back(element);
+        }
+
+        processInfo.user = lineFinal[0];
+        processInfo.pid = std::stoi(lineFinal[1]);
+        processInfo.percCPU = std::stod(lineFinal[2]);
+        processInfo.percRAM = std::stod(lineFinal[3]);
+        processInfo.start = lineFinal[8];
+        processInfo.time = lineFinal[9];
+        processInfo.command = lineFinal[10];
+
+        processInfoVect.push_back(processInfo);
+    }
+
+    return processInfoVect;
+}
+
+std::vector<DiskInfo> Agent::takeDiskInfos()
+{
+    std::vector<DiskInfo> diskInfos{};
+
+    std::string result = execCommand("df -h");
+
+    std::vector<std::string> lines = ManageString::splitString(result, '\n');
+
+    for (int i = 1; i< lines.size(); i++)
+    {
+        DiskInfo diskInfo;
+
+        std::vector<std::string> line = ManageString::splitString(lines[i], ' ');
+        std::vector<std::string> lineFinal{};
+
+        for (const auto& element: line)
+        {
+            if (element != "")
+                lineFinal.push_back(element);
+        }
+
+        diskInfo.fileSystem = lineFinal[0];
+        diskInfo.size = lineFinal[1];
+        diskInfo.used = lineFinal[2];
+        diskInfo.available = lineFinal[3];
+        diskInfo.use = lineFinal[4];
+        diskInfo.mountedOn = lineFinal[5];
+
+        diskInfos.push_back(diskInfo);
+    }
+
+    return diskInfos;
 }
 
 

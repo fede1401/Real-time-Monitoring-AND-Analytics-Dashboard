@@ -113,14 +113,14 @@ void Listener::receiveData()
         {
             // set the end of string with '\0'
             buffer_[bytesRead] = '\0';
-            std::cout << "Received" << buffer_ << std::endl;
+            // std::cout << "Received" << buffer_ << std::endl;
 
-            for (int i = 0; i< bytesRead; i++)
-            {
-                printf("%02X ", buffer_[i]);
-                std::cout << "Received " << buffer_[i] << std::endl;
-            }
-            std::cout << buffer_ << std::endl;
+            // for (int i = 0; i< bytesRead; i++)
+            // {
+            //     printf("%02X ", buffer_[i]);
+            //     std::cout << "Received " << buffer_[i] << std::endl;
+            // }
+            // std::cout << buffer_ << std::endl;
 
             std::string bufferString(buffer_);
             Request req = marshal_->unmarshal(bufferString);
@@ -131,9 +131,11 @@ void Listener::receiveData()
 
                 CPU    infoCPU        = agent_->takeInfoCPU();
                 RAM    infoRAM        = agent_->takeInfoRAM();
+                std::vector<ProcessInfo> infoProcess = agent_->takeInfoProcess();
                 std::vector<ActiveConnection> infoConnections = agent_->takeInfoConnection();
+                std::vector<DiskInfo> infoDisk = agent_->takeDiskInfos();
 
-                std::string html     = buildDashboardHTML(infoCPU, infoRAM, infoConnections);
+                std::string html     = buildDashboardHTML(infoCPU, infoRAM, infoConnections, infoProcess, infoDisk);
                 std::string response = buildHTTPResponse(html);
 
                 send(clientSocket_, response.c_str(), response.size(), 0);
@@ -166,10 +168,65 @@ std::string Listener::buildHTTPResponse(const std::string& html)
 /* ─────────────────────────────────────────────────────────────────
    Build dashboard HTML with real system data injected
 ───────────────────────────────────────────────────────────────── */
-std::string Listener::buildDashboardHTML(const CPU& cpu,
+std::string Listener::buildDashboardHTML( const CPU& cpu,
                                           const RAM& ram,
-                                          const std::vector<ActiveConnection>& connections)
+                                          const std::vector<ActiveConnection>& connections,
+                                          const std::vector<ProcessInfo>& process,
+                                          const std::vector<DiskInfo>& disk
+                                         )
 {
+    // ── process rows ─────────────────────────────────────────────
+    std::ostringstream procRows;
+    for (const auto& p : process)
+    {
+        std::string cpuClass = (p.percCPU >= 50.0) ? "style='color:#f2495c;font-weight:700'" :
+                               (p.percCPU >= 20.0) ? "style='color:#f47a42;font-weight:600'" : "";
+        std::string ramClass = (p.percRAM >= 50.0) ? "style='color:#f2495c;font-weight:700'" :
+                               (p.percRAM >= 20.0) ? "style='color:#f47a42;font-weight:600'" : "";
+
+        procRows << "<tr>"
+                 << "<td class='muted'>" << p.pid << "</td>"
+                 << "<td>" << p.user << "</td>"
+                 << "<td " << cpuClass << ">" << std::fixed << std::setprecision(1) << p.percCPU << "%</td>"
+                 << "<td " << ramClass << ">" << std::fixed << std::setprecision(1) << p.percRAM << "%</td>"
+                 << "<td class='muted'>" << p.start << "</td>"
+                 << "<td class='muted'>" << p.time << "</td>"
+                 << "<td>" << p.command << "</td>"
+                 << "</tr>\n";
+    }
+    std::string processRows  = procRows.str();
+    std::string processCount = std::to_string(process.size());
+
+    // ── disk rows ─────────────────────────────────────────────────
+    std::ostringstream diskCards;
+    for (const auto& d : disk)
+    {
+        int usePct = 0;
+        try { usePct = std::stoi(d.use); } catch (...) {}
+
+        std::string barColor = (usePct >= 90) ? "#f2495c" :
+                               (usePct >= 70) ? "#f47a42" : "#73bf69";
+        std::string textColor = (usePct >= 90) ? "color:#f2495c;font-weight:700" :
+                                (usePct >= 70) ? "color:#f47a42;font-weight:600" : "";
+
+        diskCards << "<div class='disk-card'>"
+                  << "<div class='disk-header'>"
+                  << "<span class='disk-mount'>" << d.mountedOn << "</span>"
+                  << "<span class='disk-pct' style='" << textColor << "'>" << d.use << "</span>"
+                  << "</div>"
+                  << "<div class='disk-fs muted'>" << d.fileSystem << "</div>"
+                  << "<div class='ptrack' style='margin:8px 0 6px'>"
+                  << "<div class='pfill' style='width:" << d.use << ";background:" << barColor << "'></div>"
+                  << "</div>"
+                  << "<div class='disk-stats'>"
+                  << "<span>Used <b>" << d.used << "</b></span>"
+                  << "<span>Avail <b>" << d.available << "</b></span>"
+                  << "<span>Size <b>" << d.size << "</b></span>"
+                  << "</div>"
+                  << "</div>\n";
+    }
+    std::string diskHTML = diskCards.str();
+
     // ── connection rows ──────────────────────────────────────────
     std::ostringstream rows;
     for (const auto& c : connections)
@@ -239,7 +296,7 @@ body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--bg);co
 .content{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:20px}
 .sec{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:2px}
 .sec::after{content:'';flex:1;height:1px;background:var(--border)}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;transition:border-color .2s}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:clip;transition:border-color .2s}
 .panel:hover{border-color:#3a4a6a}
 .ph{padding:12px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
 .pt{font-size:13px;font-weight:600;color:var(--bright);flex:1}
@@ -279,9 +336,9 @@ body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--bg);co
 .pfill.orange{background:linear-gradient(90deg,var(--orange),#d4633a)}
 .pfill.blue{background:linear-gradient(90deg,var(--blue),#4070cc)}
 .pfill.green{background:linear-gradient(90deg,var(--green),#5fa85a)}
-.tw{overflow-x:auto}
+.tw{overflow-x:auto;overflow-y:auto;max-height:320px}
 table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{text-align:left;padding:8px 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+thead th{text-align:left;padding:8px 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;background:var(--surface);z-index:1}
 tbody tr{border-bottom:1px solid rgba(42,51,72,.5);transition:background .15s}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:rgba(255,255,255,.03)}
@@ -301,6 +358,14 @@ td.muted{color:var(--muted)}
 .card,.panel{animation:fadeInUp .4s ease both}
 .card:nth-child(1){animation-delay:.05s}.card:nth-child(2){animation-delay:.1s}
 .card:nth-child(3){animation-delay:.15s}.card:nth-child(4){animation-delay:.2s}
+.disk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:16px}
+.disk-card{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.disk-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+.disk-mount{font-size:14px;font-weight:600;color:var(--bright)}
+.disk-pct{font-size:13px}
+.disk-fs{font-size:11px;margin-bottom:2px}
+.disk-stats{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.disk-stats b{color:var(--text)}
 @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:800px){.g4,.g2{grid-template-columns:1fr}.sidebar{display:none}}
 </style>
@@ -455,6 +520,41 @@ td.muted{color:var(--muted)}
               <div class="ptrack"><div class="pfill green" id="barAvail" style="width:0%"></div></div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">Disk Usage</div>
+    <div class="panel">
+      <div class="ph">
+        <span>&#x1F4BE;</span>
+        <span class="pt">File Systems</span>
+      </div>
+      <div class="disk-grid">)HTML";
+    h << diskHTML;
+    h << R"HTML(</div>
+    </div>
+    <div class="sec">Top Processes</div>
+    <div class="panel">
+      <div class="ph">
+        <span>&#x25A0;</span>
+        <span class="pt">Processes by CPU &amp; RAM</span>
+        <span class="badge badge-blue">)HTML";
+    h << processCount;
+    h << R"HTML( entries</span>
+      </div>
+      <div class="pb" style="padding:0">
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>PID</th><th>User</th><th>CPU %</th><th>RAM %</th>
+                <th>Started</th><th>Time</th><th>Command</th>
+              </tr>
+            </thead>
+            <tbody>)HTML";
+    h << processRows;
+    h << R"HTML(</tbody>
+          </table>
         </div>
       </div>
     </div>

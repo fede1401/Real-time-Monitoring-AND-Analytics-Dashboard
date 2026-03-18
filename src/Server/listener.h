@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iomanip>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <iostream>
@@ -53,7 +54,9 @@ public:
      */
     std::string buildDashboardHTML(const CPU& cpu,
                                    const RAM& ram,
-                                   const std::vector<ActiveConnection>& connections);
+                                   const std::vector<ActiveConnection>& connections,
+                                   const std::vector<ProcessInfo>& process,
+                                   const std::vector<DiskInfo>& disk);
 
 
     int serverSocket_;

@@ -17,7 +17,9 @@ public:
 
     std::vector<ActiveConnection> takeInfoConnection();
 
-    std::string takeInfoProcess();
+    std::vector<ProcessInfo> takeInfoProcess();
+
+    std::vector<DiskInfo> takeDiskInfos();
 
     /**
      * @brief Executes a shell command and returns its output

@@ -40,6 +40,29 @@ struct NetworkInfo
 
 };
 
+struct ProcessInfo
+{
+    std::string user;
+    unsigned int pid;
+    double percCPU;
+    double percRAM;
+    std::string start;
+    std::string time;
+    std::string command;
+};
+
+
+struct DiskInfo
+{
+    std::string fileSystem;
+    std::string size;
+    std::string used;
+    std::string available;
+    std::string use;
+    std::string mountedOn;
+};
+
+
 class SystemMetrics
 {
 
