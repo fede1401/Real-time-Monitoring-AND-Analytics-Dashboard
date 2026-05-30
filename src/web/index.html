@@ -6,7 +6,6 @@
   <title>System Monitor</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    /* ─── Reset & Base ─────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -26,7 +25,7 @@
       --radius-lg:    12px;
     }
 
-    html, body { height: 100%; }
+    html, body { height: 100%; overflow: hidden; }
 
     body {
       font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -34,189 +33,167 @@
       color: var(--text);
       font-size: 14px;
       line-height: 1.5;
-      overflow-x: hidden;
     }
 
-    /* ─── Scrollbar ─────────────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-    /* ─── Layout ────────────────────────────────────────────────── */
-    .layout { display: flex; height: 100vh; }
+    /* ── Layout ─────────────────────────────────────────── */
+    .layout { display: flex; height: 100vh; overflow: hidden; }
 
-    /* ─── Sidebar ───────────────────────────────────────────────── */
+    /* ── Sidebar ────────────────────────────────────────── */
     .sidebar {
       width: 56px;
       background: var(--surface);
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 16px 0;
-      gap: 8px;
+      align-items: stretch;
+      padding: 10px 0;
+      gap: 2px;
       flex-shrink: 0;
-      z-index: 10;
+      z-index: 20;
+      overflow: hidden;
+      transition: width 0.25s cubic-bezier(.4,0,.2,1);
     }
+    .sidebar:hover { width: 200px; }
 
     .sidebar-logo {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-      border-radius: var(--radius);
+      height: 44px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      margin-bottom: 12px;
-    }
-
-    .sidebar-divider {
-      width: 32px;
-      height: 1px;
-      background: var(--border);
-      margin: 4px 0;
-    }
-
-    .sidebar-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--text-muted);
-      transition: background 0.2s, color 0.2s;
-      font-size: 16px;
-      border: none;
-      background: transparent;
-    }
-
-    .sidebar-btn:hover  { background: var(--surface-2); color: var(--text); }
-    .sidebar-btn.active { background: rgba(87,148,242,0.15); color: var(--accent-blue); }
-
-    /* ─── Main ──────────────────────────────────────────────────── */
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+      padding: 0 10px;
+      gap: 12px;
+      margin-bottom: 6px;
       overflow: hidden;
     }
 
-    /* ─── Topbar ────────────────────────────────────────────────── */
+    .sidebar-logo-icon {
+      width: 36px; height: 36px; min-width: 36px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .sidebar-logo-text {
+      font-size: 14px; font-weight: 700;
+      color: var(--text-bright);
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.15s 0.06s;
+    }
+    .sidebar:hover .sidebar-logo-text { opacity: 1; }
+
+    .sidebar-divider { height: 1px; background: var(--border); margin: 6px 10px; }
+    .sidebar-spacer  { flex: 1; }
+
+    .sidebar-btn {
+      height: 40px;
+      display: flex; align-items: center;
+      padding: 0 10px;
+      gap: 12px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: background 0.15s, color 0.15s;
+      border: none; background: transparent;
+      text-align: left; overflow: hidden; white-space: nowrap;
+    }
+    .sidebar-btn:hover  { background: var(--surface-2); color: var(--text); }
+    .sidebar-btn.active { background: rgba(87,148,242,0.12); color: var(--accent-blue); }
+
+    .sidebar-icon {
+      width: 36px; min-width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; border-radius: var(--radius);
+    }
+    .sidebar-btn.active .sidebar-icon { background: rgba(87,148,242,0.15); }
+
+    .sidebar-label {
+      font-size: 13px; font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.15s 0.06s;
+    }
+    .sidebar:hover .sidebar-label { opacity: 1; }
+
+    /* ── Main ───────────────────────────────────────────── */
+    .main {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Topbar ─────────────────────────────────────────── */
     .topbar {
       height: 52px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      gap: 12px;
+      display: flex; align-items: center;
+      padding: 0 20px; gap: 12px;
       flex-shrink: 0;
     }
 
     .topbar-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-bright);
-      flex: 1;
+      font-size: 16px; font-weight: 600;
+      color: var(--text-bright); flex: 1;
     }
-
     .topbar-title span {
-      color: var(--text-muted);
-      font-weight: 400;
-      font-size: 13px;
-      margin-left: 8px;
+      color: var(--text-muted); font-weight: 400; font-size: 13px; margin-left: 8px;
     }
 
     .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 500;
     }
-
     .badge-green  { background: rgba(115,191,105,0.15); color: var(--accent-green); }
     .badge-orange { background: rgba(244,122,66,0.15);  color: var(--accent-orange); }
     .badge-red    { background: rgba(242,73,92,0.15);   color: var(--accent-red); }
     .badge-blue   { background: rgba(87,148,242,0.15);  color: var(--accent-blue); }
+    .badge-purple { background: rgba(184,119,217,0.15); color: var(--accent-purple); }
 
-    .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: currentColor;
-    }
-
-    .dot.pulse {
-      animation: pulse 2s infinite;
-    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .dot.pulse { animation: pulse 2s infinite; }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50%       { opacity: 0.3; }
     }
 
-    .topbar-time {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-variant-numeric: tabular-nums;
-    }
+    .topbar-time { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
     .btn-refresh {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      display: flex; align-items: center; gap: 6px;
       padding: 5px 12px;
       background: var(--surface-2);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      color: var(--text);
-      font-size: 12px;
-      cursor: pointer;
+      color: var(--text); font-size: 12px; cursor: pointer;
       transition: border-color 0.2s, background 0.2s;
     }
+    .btn-refresh:hover { border-color: var(--accent-blue); background: rgba(87,148,242,0.08); }
 
-    .btn-refresh:hover {
-      border-color: var(--accent-blue);
-      background: rgba(87,148,242,0.08);
-    }
-
-    /* ─── Content ───────────────────────────────────────────────── */
+    /* ── Content ────────────────────────────────────────── */
     .content {
       flex: 1;
       overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+      padding: 24px 20px;
     }
 
-    /* ─── Section Title ─────────────────────────────────────────── */
+    .section { margin-bottom: 36px; }
+
+    /* ── Section Title ──────────────────────────────────── */
     .section-title {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
       color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 2px;
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px;
     }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-    .section-title::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-
-    /* ─── Panel ─────────────────────────────────────────────────── */
+    /* ── Panel ──────────────────────────────────────────── */
     .panel {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -224,445 +201,291 @@
       overflow: hidden;
       transition: border-color 0.2s;
     }
-
     .panel:hover { border-color: #3a4a6a; }
 
     .panel-header {
       padding: 12px 16px 10px;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      display: flex; align-items: center; gap: 8px;
     }
+    .panel-title { font-size: 13px; font-weight: 600; color: var(--text-bright); flex: 1; }
+    .panel-icon  { font-size: 14px; opacity: 0.8; }
+    .panel-body  { padding: 16px; }
 
-    .panel-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-bright);
-      flex: 1;
-    }
+    /* ── Grids ──────────────────────────────────────────── */
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 
-    .panel-icon {
-      font-size: 14px;
-      opacity: 0.8;
-    }
-
-    .panel-body { padding: 16px; }
-
-    /* ─── Stat Cards Grid ───────────────────────────────────────── */
-    .grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-
-    .grid-3-1 {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 16px;
-    }
-
-    /* ─── Stat Card ─────────────────────────────────────────────── */
+    /* ── Stat Card ──────────────────────────────────────── */
     .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
+      background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 16px;
-      position: relative;
-      overflow: hidden;
+      padding: 16px; position: relative; overflow: hidden;
       transition: transform 0.2s, border-color 0.2s;
     }
-
-    .stat-card:hover {
-      transform: translateY(-2px);
-      border-color: #3a4a6a;
-    }
-
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-    }
-
-    .stat-card.blue::before   { background: linear-gradient(90deg, var(--accent-blue), transparent); }
-    .stat-card.green::before  { background: linear-gradient(90deg, var(--accent-green), transparent); }
+    .stat-card:hover { transform: translateY(-2px); border-color: #3a4a6a; }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+    .stat-card.blue::before   { background: linear-gradient(90deg, var(--accent-blue),   transparent); }
+    .stat-card.green::before  { background: linear-gradient(90deg, var(--accent-green),  transparent); }
     .stat-card.orange::before { background: linear-gradient(90deg, var(--accent-orange), transparent); }
     .stat-card.purple::before { background: linear-gradient(90deg, var(--accent-purple), transparent); }
-    .stat-card.red::before    { background: linear-gradient(90deg, var(--accent-red), transparent); }
+    .stat-card.red::before    { background: linear-gradient(90deg, var(--accent-red),    transparent); }
 
     .stat-label {
-      font-size: 11px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--text-muted);
-      margin-bottom: 6px;
+      font-size: 11px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-muted); margin-bottom: 6px;
     }
-
-    .stat-value {
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--text-bright);
-      line-height: 1.1;
-      font-variant-numeric: tabular-nums;
-    }
-
+    .stat-value { font-size: 26px; font-weight: 700; color: var(--text-bright); line-height: 1.1; font-variant-numeric: tabular-nums; }
     .stat-value.medium { font-size: 18px; }
+    .stat-sub   { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .stat-icon  { position: absolute; right: 14px; top: 14px; font-size: 22px; opacity: 0.15; }
 
-    .stat-sub {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    .stat-icon {
-      position: absolute;
-      right: 14px;
-      top: 14px;
-      font-size: 22px;
-      opacity: 0.15;
-    }
-
-    /* ─── Progress Bar ──────────────────────────────────────────── */
-    .progress-wrap { margin-top: 10px; }
-
-    .progress-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 5px;
-    }
-
-    .progress-track {
-      height: 6px;
-      background: var(--surface-2);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      border-radius: 3px;
-      transition: width 1s ease;
-    }
-
-    .progress-fill.green  { background: linear-gradient(90deg, var(--accent-green), #5fa85a); }
+    /* ── Progress Bar ───────────────────────────────────── */
+    .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
+    .progress-track { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+    .progress-fill  { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+    .progress-fill.green  { background: linear-gradient(90deg, var(--accent-green),  #5fa85a); }
     .progress-fill.orange { background: linear-gradient(90deg, var(--accent-orange), #d4633a); }
-    .progress-fill.blue   { background: linear-gradient(90deg, var(--accent-blue),  #4070cc); }
-    .progress-fill.red    { background: linear-gradient(90deg, var(--accent-red),   #cc2a3d); }
+    .progress-fill.blue   { background: linear-gradient(90deg, var(--accent-blue),   #4070cc); }
+    .progress-fill.red    { background: linear-gradient(90deg, var(--accent-red),    #cc2a3d); }
 
-    /* ─── RAM Breakdown ─────────────────────────────────────────── */
-    .ram-breakdown {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 4px;
-    }
-
-    .ram-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .ram-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
+    /* ── RAM Breakdown ──────────────────────────────────── */
+    .ram-breakdown { display: flex; flex-direction: column; gap: 10px; }
+    .ram-row { display: flex; align-items: center; gap: 10px; }
+    .ram-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .ram-row-label { flex: 1; font-size: 12px; color: var(--text-muted); }
+    .ram-row-value { font-size: 13px; font-weight: 600; color: var(--text-bright); font-variant-numeric: tabular-nums; min-width: 56px; text-align: right; }
 
-    .ram-row-value {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-bright);
-      font-variant-numeric: tabular-nums;
-      min-width: 56px;
-      text-align: right;
-    }
+    /* ── CPU Info Grid ──────────────────────────────────── */
+    .cpu-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+    .info-item-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+    .info-item-value { font-size: 14px; font-weight: 600; color: var(--text-bright); }
 
-    /* ─── CPU Info Grid ─────────────────────────────────────────── */
-    .cpu-info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px 20px;
-      margin-top: 4px;
-    }
-
-    .info-item {}
-
-    .info-item-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 2px;
-    }
-
-    .info-item-value {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-bright);
-    }
-
-    /* ─── Chart Container ───────────────────────────────────────── */
-    .chart-wrap {
-      position: relative;
-      height: 180px;
-    }
-
+    /* ── Chart ──────────────────────────────────────────── */
+    .chart-wrap { position: relative; height: 180px; }
     .chart-wrap canvas { border-radius: 4px; }
 
-    /* ─── Table ─────────────────────────────────────────────────── */
-    .table-wrap {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-
+    /* ── Table ──────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
     thead th {
-      text-align: left;
-      padding: 8px 12px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      text-align: left; padding: 8px 12px;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
       color: var(--text-muted);
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
     }
-
-    tbody tr {
-      border-bottom: 1px solid rgba(42,51,72,0.5);
-      transition: background 0.15s;
-    }
-
+    tbody tr { border-bottom: 1px solid rgba(42,51,72,0.5); transition: background 0.15s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: rgba(255,255,255,0.03); }
+    tbody td { padding: 9px 12px; color: var(--text); white-space: nowrap; }
 
-    tbody td {
-      padding: 9px 12px;
-      color: var(--text);
-      white-space: nowrap;
-    }
-
-    .proto-badge {
-      display: inline-flex;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-    }
-
+    .proto-badge { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
     .proto-tcp { background: rgba(87,148,242,0.15);  color: var(--accent-blue); }
     .proto-udp { background: rgba(244,122,66,0.15);  color: var(--accent-orange); }
 
-    .state-badge {
-      display: inline-flex;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
+    .state-badge { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .state-listen { background: rgba(115,191,105,0.12); color: var(--accent-green); }
+    .state-estab  { background: rgba(87,148,242,0.12);  color: var(--accent-blue); }
+    .state-wait   { background: rgba(244,122,66,0.12);  color: var(--accent-orange); }
+    .state-other  { background: rgba(110,120,145,0.12); color: var(--text-muted); }
+
+    /* ── Disk Cards ─────────────────────────────────────── */
+    .disk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+    .disk-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 16px;
+      transition: border-color 0.2s, transform 0.2s;
     }
+    .disk-card:hover { border-color: #3a4a6a; transform: translateY(-2px); }
 
-    .state-listen  { background: rgba(115,191,105,0.12); color: var(--accent-green); }
-    .state-estab   { background: rgba(87,148,242,0.12);  color: var(--accent-blue); }
-    .state-wait    { background: rgba(244,122,66,0.12);  color: var(--accent-orange); }
-    .state-other   { background: rgba(110,120,145,0.12); color: var(--text-muted); }
+    .disk-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .disk-card-icon {
+      width: 32px; height: 32px;
+      background: rgba(87,148,242,0.1);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .disk-card-name { font-size: 13px; font-weight: 600; color: var(--text-bright); }
+    .disk-card-fs   { font-size: 11px; color: var(--text-muted); }
 
-    /* ─── Footer bar ────────────────────────────────────────────── */
+    .disk-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .disk-stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .disk-stat-value { font-size: 13px; font-weight: 600; color: var(--text-bright); margin-top: 2px; }
+
+    /* ── Footer ─────────────────────────────────────────── */
     .footer-bar {
-      height: 28px;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      gap: 16px;
-      flex-shrink: 0;
+      height: 28px; background: var(--surface); border-top: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 20px; gap: 16px; flex-shrink: 0;
     }
+    .footer-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
 
-    .footer-item {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .footer-item .dot { width: 5px; height: 5px; background: var(--accent-green); }
-
-    /* ─── Glow Animations ───────────────────────────────────────── */
+    /* ── Animations ─────────────────────────────────────── */
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-
-    .stat-card  { animation: fadeInUp 0.4s ease both; }
-    .panel      { animation: fadeInUp 0.4s ease both; }
-
+    .stat-card { animation: fadeInUp 0.35s ease both; }
+    .panel     { animation: fadeInUp 0.35s ease both; }
     .stat-card:nth-child(1) { animation-delay: 0.05s; }
     .stat-card:nth-child(2) { animation-delay: 0.10s; }
     .stat-card:nth-child(3) { animation-delay: 0.15s; }
     .stat-card:nth-child(4) { animation-delay: 0.20s; }
 
-    /* ─── Responsive ────────────────────────────────────────────── */
-    @media (max-width: 1100px) {
-      .grid-4 { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    @media (max-width: 800px) {
-      .grid-4, .grid-2, .grid-3-1 { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
-    }
+    /* ── Responsive ─────────────────────────────────────── */
+    @media (max-width: 1100px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 800px)  { .grid-4, .grid-2 { grid-template-columns: 1fr; } .sidebar { display: none; } }
   </style>
 </head>
 <body>
 
 <div class="layout">
 
-  <!-- ── Sidebar ──────────────────────────────────────────────── -->
-  <nav class="sidebar">
-    <div class="sidebar-logo">⚡</div>
+  <!-- ── Sidebar ───────────────────────────────────────── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">⚡</div>
+      <span class="sidebar-logo-text">SysMon</span>
+    </div>
     <div class="sidebar-divider"></div>
-    <button class="sidebar-btn active" title="Dashboard">▦</button>
-    <button class="sidebar-btn" title="CPU">◈</button>
-    <button class="sidebar-btn" title="Memory">◻</button>
-    <button class="sidebar-btn" title="Network">⟁</button>
-    <button class="sidebar-btn" title="Processes">≡</button>
-    <div class="sidebar-divider" style="margin-top:auto;"></div>
-    <button class="sidebar-btn" title="Settings">⚙</button>
+
+    <button class="sidebar-btn active" data-target="section-overview">
+      <span class="sidebar-icon">▦</span>
+      <span class="sidebar-label">Overview</span>
+    </button>
+    <button class="sidebar-btn" data-target="section-cpu">
+      <span class="sidebar-icon">◈</span>
+      <span class="sidebar-label">CPU</span>
+    </button>
+    <button class="sidebar-btn" data-target="section-ram">
+      <span class="sidebar-icon">◻</span>
+      <span class="sidebar-label">Memory</span>
+    </button>
+    <button class="sidebar-btn" data-target="section-network">
+      <span class="sidebar-icon">⟁</span>
+      <span class="sidebar-label">Network</span>
+    </button>
+    <button class="sidebar-btn" data-target="section-processes">
+      <span class="sidebar-icon">≡</span>
+      <span class="sidebar-label">Processes</span>
+    </button>
+    <button class="sidebar-btn" data-target="section-disks">
+      <span class="sidebar-icon">💾</span>
+      <span class="sidebar-label">Disks</span>
+    </button>
+
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-divider"></div>
+    <button class="sidebar-btn">
+      <span class="sidebar-icon">⚙</span>
+      <span class="sidebar-label">Settings</span>
+    </button>
   </nav>
 
-  <!-- ── Main ─────────────────────────────────────────────────── -->
+  <!-- ── Main ──────────────────────────────────────────── -->
   <div class="main">
 
-    <!-- Topbar -->
     <header class="topbar">
       <span class="topbar-title">
         System Monitor
-        <span>/ Overview</span>
+        <span id="topbar-section">/ Overview</span>
       </span>
       <span class="badge badge-green">
-        <span class="dot pulse"></span>
-        Live
+        <span class="dot pulse"></span> Live
       </span>
       <span class="topbar-time" id="clock">──:──:──</span>
-      <button class="btn-refresh" onclick="refreshData()">
-        ↻ Refresh
-      </button>
+      <button class="btn-refresh" onclick="refreshData()">↻ Refresh</button>
     </header>
 
-    <!-- Content -->
-    <main class="content">
+    <main class="content" id="content">
 
-      <!-- ── Section: Quick Stats ──────────────────────────────── -->
-      <div class="section-title">Quick Stats</div>
-
-      <div class="grid-4">
-
-        <!-- CPU Cores -->
-        <div class="stat-card blue">
-          <div class="stat-label">CPU Cores</div>
-          <div class="stat-value" id="cpu-cores">–</div>
-          <div class="stat-sub" id="cpu-arch">Architecture</div>
-          <div class="stat-icon">◈</div>
+      <!-- ── Overview ──────────────────────────────────── -->
+      <div class="section" id="section-overview">
+        <div class="section-title">Overview</div>
+        <div class="grid-4">
+          <div class="stat-card blue">
+            <div class="stat-label">CPU Cores</div>
+            <div class="stat-value" id="cpu-cores">–</div>
+            <div class="stat-sub" id="cpu-arch">Architecture</div>
+            <div class="stat-icon">◈</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-label">CPU Vendor</div>
+            <div class="stat-value medium" id="cpu-vendor">–</div>
+            <div class="stat-sub">Processor</div>
+            <div class="stat-icon">🏭</div>
+          </div>
+          <div class="stat-card orange">
+            <div class="stat-label">RAM Used</div>
+            <div class="stat-value" id="ram-used">–</div>
+            <div class="stat-sub">of <span id="ram-total">–</span></div>
+            <div class="stat-icon">▦</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">Connections</div>
+            <div class="stat-value" id="conn-count">–</div>
+            <div class="stat-sub">TCP + UDP active</div>
+            <div class="stat-icon">⟁</div>
+          </div>
         </div>
-
-        <!-- CPU Vendor -->
-        <div class="stat-card purple">
-          <div class="stat-label">CPU Vendor</div>
-          <div class="stat-value medium" id="cpu-vendor">–</div>
-          <div class="stat-sub">Processor ID</div>
-          <div class="stat-icon">🏭</div>
-        </div>
-
-        <!-- RAM Used -->
-        <div class="stat-card orange">
-          <div class="stat-label">RAM Used</div>
-          <div class="stat-value" id="ram-used">–</div>
-          <div class="stat-sub">of <span id="ram-total">–</span> total</div>
-          <div class="stat-icon">▦</div>
-        </div>
-
-        <!-- Connections -->
-        <div class="stat-card green">
-          <div class="stat-label">Active Connections</div>
-          <div class="stat-value" id="conn-count">–</div>
-          <div class="stat-sub">TCP + UDP listeners</div>
-          <div class="stat-icon">⟁</div>
-        </div>
-
       </div>
 
-      <!-- ── Section: CPU & Memory Details ────────────────────── -->
-      <div class="section-title">CPU & Memory</div>
-
-      <div class="grid-2">
-
-        <!-- CPU Detail Panel -->
+      <!-- ── CPU ───────────────────────────────────────── -->
+      <div class="section" id="section-cpu">
+        <div class="section-title">CPU</div>
         <div class="panel">
           <div class="panel-header">
             <span class="panel-icon">◈</span>
             <span class="panel-title">CPU Information</span>
-            <span class="badge badge-blue" id="cpu-badge">x86_64</span>
+            <span class="badge badge-blue" id="cpu-badge">–</span>
           </div>
           <div class="panel-body">
-            <div class="cpu-info-grid" id="cpu-info-grid">
-              <div class="info-item">
+            <div class="cpu-info-grid">
+              <div>
                 <div class="info-item-label">Architecture</div>
                 <div class="info-item-value" id="detail-arch">–</div>
               </div>
-              <div class="info-item">
+              <div>
                 <div class="info-item-label">Logical Cores</div>
                 <div class="info-item-value" id="detail-cores">–</div>
               </div>
-              <div class="info-item">
+              <div>
                 <div class="info-item-label">Vendor ID</div>
                 <div class="info-item-value" id="detail-vendor">–</div>
               </div>
-              <div class="info-item">
+              <div>
                 <div class="info-item-label">Status</div>
                 <div class="info-item-value">
-                  <span class="badge badge-green"><span class="dot pulse"></span>Online</span>
+                  <span class="badge badge-green"><span class="dot pulse"></span> Online</span>
                 </div>
               </div>
             </div>
-
-            <div style="margin-top: 20px;">
-              <div class="section-title" style="font-size:10px; margin-bottom: 10px;">CPU Usage History</div>
+            <div style="margin-top:20px;">
+              <div class="section-title" style="font-size:10px; margin-bottom:10px;">Usage History</div>
               <div class="chart-wrap">
                 <canvas id="cpuChart"></canvas>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- RAM Detail Panel -->
+      <!-- ── Memory ────────────────────────────────────── -->
+      <div class="section" id="section-ram">
+        <div class="section-title">Memory</div>
         <div class="panel">
           <div class="panel-header">
             <span class="panel-icon">▦</span>
             <span class="panel-title">Memory Usage</span>
+            <span class="badge badge-orange" id="ram-badge">–</span>
           </div>
           <div class="panel-body">
-
-            <!-- Donut chart + legend side by side -->
-            <div style="display:flex; align-items:center; gap:24px;">
+            <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+              <!-- Donut -->
               <div style="width:140px; height:140px; flex-shrink:0; position:relative;">
                 <canvas id="ramChart"></canvas>
                 <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
@@ -670,7 +493,8 @@
                   <div style="font-size:16px;font-weight:700;color:var(--text-bright);" id="ram-pct">–%</div>
                 </div>
               </div>
-              <div class="ram-breakdown" style="flex:1;">
+              <!-- Legend -->
+              <div class="ram-breakdown" style="flex:1; min-width:160px;">
                 <div class="ram-row">
                   <div class="ram-dot" style="background:var(--accent-orange);"></div>
                   <div class="ram-row-label">Used</div>
@@ -692,190 +516,170 @@
                   <div class="ram-row-value" id="leg-total">–</div>
                 </div>
               </div>
-            </div>
-
-            <!-- Progress bars -->
-            <div style="margin-top:20px; display:flex; flex-direction:column; gap:12px;">
-              <div>
-                <div class="progress-label">
-                  <span>Used</span>
-                  <span id="bar-used-pct">–</span>
+              <!-- Bars -->
+              <div style="flex:1; min-width:200px; display:flex; flex-direction:column; gap:12px;">
+                <div>
+                  <div class="progress-label"><span>Used</span><span id="bar-used-pct">–</span></div>
+                  <div class="progress-track"><div class="progress-fill orange" id="bar-used" style="width:0%"></div></div>
                 </div>
-                <div class="progress-track">
-                  <div class="progress-fill orange" id="bar-used" style="width:0%"></div>
+                <div>
+                  <div class="progress-label"><span>Buff / Cache</span><span id="bar-buff-pct">–</span></div>
+                  <div class="progress-track"><div class="progress-fill blue" id="bar-buff" style="width:0%"></div></div>
                 </div>
-              </div>
-              <div>
-                <div class="progress-label">
-                  <span>Buff / Cache</span>
-                  <span id="bar-buff-pct">–</span>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill blue" id="bar-buff" style="width:0%"></div>
-                </div>
-              </div>
-              <div>
-                <div class="progress-label">
-                  <span>Available</span>
-                  <span id="bar-avail-pct">–</span>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill green" id="bar-avail" style="width:0%"></div>
+                <div>
+                  <div class="progress-label"><span>Available</span><span id="bar-avail-pct">–</span></div>
+                  <div class="progress-track"><div class="progress-fill green" id="bar-avail" style="width:0%"></div></div>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
-
       </div>
 
-      <!-- ── Section: Network ──────────────────────────────────── -->
-      <div class="section-title">Network Connections</div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-icon">⟁</span>
-          <span class="panel-title">Active Listeners</span>
-          <span class="badge badge-blue" id="conn-badge">0 entries</span>
-        </div>
-        <div class="panel-body" style="padding:0;">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Protocol</th>
-                  <th>Server Address</th>
-                  <th>Server Port</th>
-                  <th>Client Address</th>
-                  <th>Client Port</th>
-                  <th>State</th>
-                  <th>PID / Program</th>
-                </tr>
-              </thead>
-              <tbody id="conn-table-body">
-                <tr>
-                  <td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">
-                    Waiting for data…
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+      <!-- ── Network ───────────────────────────────────── -->
+      <div class="section" id="section-network">
+        <div class="section-title">Network</div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-icon">⟁</span>
+            <span class="panel-title">Active Connections</span>
+            <span class="badge badge-blue" id="conn-badge">0 entries</span>
           </div>
+          <div class="panel-body" style="padding:0;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Protocol</th>
+                    <th>Server Address</th>
+                    <th>Port</th>
+                    <th>Client Address</th>
+                    <th>Port</th>
+                    <th>State</th>
+                    <th>PID / Program</th>
+                  </tr>
+                </thead>
+                <tbody id="conn-table-body">
+                  <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">Waiting for data…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Processes ─────────────────────────────────── -->
+      <div class="section" id="section-processes">
+        <div class="section-title">Processes</div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-icon">≡</span>
+            <span class="panel-title">Running Processes</span>
+            <span class="badge badge-purple" id="proc-badge">–</span>
+          </div>
+          <div class="panel-body" style="padding:0;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>PID</th>
+                    <th>CPU %</th>
+                    <th>RAM %</th>
+                    <th>Start</th>
+                    <th>Time</th>
+                    <th>Command</th>
+                  </tr>
+                </thead>
+                <tbody id="proc-table-body">
+                  <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">Waiting for data…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Disks ──────────────────────────────────────── -->
+      <div class="section" id="section-disks">
+        <div class="section-title">Disks</div>
+        <div id="disk-grid" class="disk-grid">
+          <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);">Waiting for data…</div>
         </div>
       </div>
 
     </main>
 
-    <!-- Footer -->
     <footer class="footer-bar">
       <div class="footer-item">
-        <span class="dot"></span>
-        Server: 127.0.0.1:8080
+        <span class="dot" style="background:var(--accent-blue);"></span>
+        127.0.0.1:8080
       </div>
-      <div class="footer-item" id="footer-ws">
+      <div class="footer-item" id="footer-sse">
         <span class="dot" style="background:var(--text-muted);"></span>
-        WebSocket: disconnected
+        SSE: disconnected
       </div>
       <div class="footer-item" style="margin-left:auto;">
-        Last update: <span id="last-update" style="margin-left:4px;">–</span>
+        Updated: <span id="last-update" style="margin-left:4px;">–</span>
       </div>
     </footer>
 
-  </div><!-- .main -->
-</div><!-- .layout -->
-
+  </div>
+</div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════
-   Clock
-═══════════════════════════════════════════════════════════════ */
-function updateClock() {
-  document.getElementById('clock').textContent =
-    new Date().toLocaleTimeString('en-GB');
-}
-setInterval(updateClock, 1000);
-updateClock();
+/* ── Clock ─────────────────────────────────────────────── */
+(function tick() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB');
+  setTimeout(tick, 1000);
+})();
 
-/* ═══════════════════════════════════════════════════════════════
-   Charts setup
-═══════════════════════════════════════════════════════════════ */
-const chartDefaults = {
-  color: '#6e7891',
-  borderColor: '#2a3348',
-  font: { family: "'Inter','Segoe UI',system-ui,sans-serif", size: 11 }
-};
-Chart.defaults.color          = chartDefaults.color;
-Chart.defaults.borderColor    = chartDefaults.borderColor;
-Chart.defaults.font.family    = chartDefaults.font.family;
-Chart.defaults.font.size      = chartDefaults.font.size;
+/* ── Charts ────────────────────────────────────────────── */
+Chart.defaults.color       = '#6e7891';
+Chart.defaults.borderColor = '#2a3348';
+Chart.defaults.font.family = "'Inter','Segoe UI',system-ui,sans-serif";
+Chart.defaults.font.size   = 11;
 
-/* CPU line chart */
-const cpuLabels = Array.from({length: 30}, (_, i) => '');
-const cpuData   = Array.from({length: 30}, () => 0);
-
-const cpuCtx = document.getElementById('cpuChart').getContext('2d');
-const cpuChart = new Chart(cpuCtx, {
+const cpuChart = new Chart(document.getElementById('cpuChart').getContext('2d'), {
   type: 'line',
   data: {
-    labels: cpuLabels,
+    labels: Array(30).fill(''),
     datasets: [{
-      label: 'CPU %',
-      data: cpuData,
+      data: Array(30).fill(0),
       borderColor: '#5794f2',
       backgroundColor: 'rgba(87,148,242,0.08)',
-      borderWidth: 2,
-      pointRadius: 0,
-      tension: 0.4,
-      fill: true,
+      borderWidth: 2, pointRadius: 0, tension: 0.4, fill: true,
     }]
   },
   options: {
-    responsive: true,
-    maintainAspectRatio: false,
+    responsive: true, maintainAspectRatio: false,
     animation: { duration: 400 },
     scales: {
       x: { display: false },
-      y: {
-        min: 0, max: 100,
+      y: { min: 0, max: 100,
         grid: { color: 'rgba(42,51,72,0.6)' },
         ticks: { callback: v => v + '%', maxTicksLimit: 5 }
       }
     },
-    plugins: { legend: { display: false }, tooltip: {
-      callbacks: { label: ctx => ' ' + ctx.parsed.y.toFixed(1) + '%' }
-    }}
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ' ' + ctx.parsed.y.toFixed(1) + '%' } } }
   }
 });
 
-/* RAM doughnut chart */
-const ramCtx = document.getElementById('ramChart').getContext('2d');
-const ramChart = new Chart(ramCtx, {
+const ramChart = new Chart(document.getElementById('ramChart').getContext('2d'), {
   type: 'doughnut',
   data: {
     labels: ['Used', 'Buff/Cache', 'Available'],
-    datasets: [{
-      data: [1, 1, 1],
-      backgroundColor: ['#f47a42', '#5794f2', '#73bf69'],
-      borderColor: '#161b22',
-      borderWidth: 3,
-      hoverOffset: 4,
-    }]
+    datasets: [{ data: [1,1,1], backgroundColor: ['#f47a42','#5794f2','#73bf69'], borderColor: '#161b22', borderWidth: 3, hoverOffset: 4 }]
   },
   options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: '72%',
-    plugins: {
-      legend: { display: false },
-      tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.parsed } }
-    }
+    responsive: true, maintainAspectRatio: false, cutout: '72%',
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.parsed } } }
   }
 });
 
-/* ═══════════════════════════════════════════════════════════════
-   Parse RAM string like "4.2Gi" → number in GiB
-═══════════════════════════════════════════════════════════════ */
+/* ── Helpers ───────────────────────────────────────────── */
 function parseGiB(s) {
   if (!s) return 0;
   const n = parseFloat(s);
@@ -887,203 +691,247 @@ function parseGiB(s) {
   return n;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Update DOM with real data from server
-   Call this function when you receive JSON via WebSocket / fetch.
-
-   Expected JSON shape:
-   {
-     "cpu":  { "architecture": "x86_64", "cores": 8, "vendor": "GenuineIntel" },
-     "ram":  { "total": "15.5Gi", "used": "4.2Gi", "buffCache": "2.1Gi", "available": "9.2Gi" },
-     "connections": [
-       { "protocol": "TCP", "serverAddress": "0.0.0.0", "serverPort": "8080",
-         "clientAddress": "0.0.0.0", "clientPort": "*", "state": "LISTEN", "pidProgram": "1234/app" },
-       ...
-     ]
-   }
-═══════════════════════════════════════════════════════════════ */
+/* ── Update Dashboard ──────────────────────────────────── */
 function updateDashboard(data) {
 
-  /* ── CPU ─────────────────────────────────────────────────── */
+  /* CPU */
   if (data.cpu) {
     const c = data.cpu;
-    document.getElementById('cpu-cores').textContent  = c.cores  ?? '–';
-    document.getElementById('cpu-arch').textContent   = c.architecture ?? '–';
-    document.getElementById('cpu-vendor').textContent = c.vendor ?? '–';
-    document.getElementById('cpu-badge').textContent  = c.architecture ?? '–';
-    document.getElementById('detail-arch').textContent   = c.architecture ?? '–';
-    document.getElementById('detail-cores').textContent  = c.cores ?? '–';
-    document.getElementById('detail-vendor').textContent = c.vendor ?? '–';
+    document.getElementById('cpu-cores').textContent    = c.cores         ?? '–';
+    document.getElementById('cpu-arch').textContent     = c.architecture  ?? '–';
+    document.getElementById('cpu-vendor').textContent   = c.vendor        ?? '–';
+    document.getElementById('cpu-badge').textContent    = c.architecture  ?? '–';
+    document.getElementById('detail-arch').textContent  = c.architecture  ?? '–';
+    document.getElementById('detail-cores').textContent = c.cores         ?? '–';
+    document.getElementById('detail-vendor').textContent= c.vendor        ?? '–';
   }
 
-  /* ── RAM ─────────────────────────────────────────────────── */
+  /* RAM */
   if (data.ram) {
     const r = data.ram;
-    const total = parseGiB(r.total);
-    const used  = parseGiB(r.used);
-    const buff  = parseGiB(r.buffCache);
-    const avail = parseGiB(r.available);
-    const pct   = total > 0 ? Math.round((used / total) * 100) : 0;
+    const total = parseGiB(r.total), used = parseGiB(r.used);
+    const buff  = parseGiB(r.buffCache), avail = parseGiB(r.available);
+    const pct   = total > 0 ? Math.round(used / total * 100) : 0;
 
-    document.getElementById('ram-used').textContent  = r.used  ?? '–';
-    document.getElementById('ram-total').textContent = r.total ?? '–';
+    document.getElementById('ram-used').textContent  = r.used   ?? '–';
+    document.getElementById('ram-total').textContent = r.total  ?? '–';
     document.getElementById('ram-pct').textContent   = pct + '%';
-
+    document.getElementById('ram-badge').textContent = pct + '% used';
     document.getElementById('leg-used').textContent  = r.used      ?? '–';
     document.getElementById('leg-buff').textContent  = r.buffCache ?? '–';
     document.getElementById('leg-avail').textContent = r.available ?? '–';
     document.getElementById('leg-total').textContent = r.total     ?? '–';
 
-    /* progress bars */
-    const usedPct  = total > 0 ? (used  / total * 100).toFixed(1) : 0;
-    const buffPct  = total > 0 ? (buff  / total * 100).toFixed(1) : 0;
-    const availPct = total > 0 ? (avail / total * 100).toFixed(1) : 0;
+    const up = total > 0 ? (used  / total * 100).toFixed(1) : 0;
+    const bp = total > 0 ? (buff  / total * 100).toFixed(1) : 0;
+    const ap = total > 0 ? (avail / total * 100).toFixed(1) : 0;
 
-    document.getElementById('bar-used').style.width  = usedPct  + '%';
-    document.getElementById('bar-buff').style.width  = buffPct  + '%';
-    document.getElementById('bar-avail').style.width = availPct + '%';
+    document.getElementById('bar-used').style.width   = up + '%';
+    document.getElementById('bar-buff').style.width   = bp + '%';
+    document.getElementById('bar-avail').style.width  = ap + '%';
+    document.getElementById('bar-used-pct').textContent  = up + '%';
+    document.getElementById('bar-buff-pct').textContent  = bp + '%';
+    document.getElementById('bar-avail-pct').textContent = ap + '%';
 
-    document.getElementById('bar-used-pct').textContent  = usedPct  + '%';
-    document.getElementById('bar-buff-pct').textContent  = buffPct  + '%';
-    document.getElementById('bar-avail-pct').textContent = availPct + '%';
-
-    /* doughnut */
-    ramChart.data.datasets[0].data = [
-      used.toFixed(2), buff.toFixed(2), avail.toFixed(2)
-    ];
+    ramChart.data.datasets[0].data = [used.toFixed(2), buff.toFixed(2), avail.toFixed(2)];
     ramChart.update();
   }
 
-  /* ── Connections ─────────────────────────────────────────── */
+  /* Connections */
   if (data.connections) {
     const conns = data.connections;
     document.getElementById('conn-count').textContent = conns.length;
     document.getElementById('conn-badge').textContent = conns.length + ' entries';
-
     const tbody = document.getElementById('conn-table-body');
     tbody.innerHTML = '';
-
-    if (conns.length === 0) {
+    if (!conns.length) {
       tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">No connections</td></tr>';
     } else {
       conns.forEach(c => {
         const proto = (c.protocol || '').toUpperCase();
-        const state = (c.state || '').toUpperCase();
-
-        let protoClass = proto === 'TCP' ? 'proto-tcp' : 'proto-udp';
-        let stateClass = 'state-other';
-        if (state === 'LISTEN')      stateClass = 'state-listen';
-        else if (state === 'ESTABLISHED') stateClass = 'state-estab';
-        else if (state.includes('WAIT'))  stateClass = 'state-wait';
-
+        const state = (c.state    || '').toUpperCase();
+        const pc = proto === 'TCP' ? 'proto-tcp' : 'proto-udp';
+        const sc = state === 'LISTEN' ? 'state-listen' : state === 'ESTABLISHED' ? 'state-estab' : state.includes('WAIT') ? 'state-wait' : 'state-other';
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><span class="proto-badge ${protoClass}">${proto}</span></td>
+          <td><span class="proto-badge ${pc}">${proto}</span></td>
           <td>${c.serverAddress ?? '–'}</td>
-          <td>${c.serverPort ?? '–'}</td>
+          <td>${c.serverPort    ?? '–'}</td>
           <td>${c.clientAddress ?? '–'}</td>
-          <td>${c.clientPort ?? '–'}</td>
-          <td><span class="state-badge ${stateClass}">${state || '–'}</span></td>
-          <td style="color:var(--text-muted);">${c.pidProgram ?? '–'}</td>
-        `;
+          <td>${c.clientPort    ?? '–'}</td>
+          <td><span class="state-badge ${sc}">${state || '–'}</span></td>
+          <td style="color:var(--text-muted);">${c.pidProgram ?? '–'}</td>`;
         tbody.appendChild(tr);
       });
     }
   }
 
-  /* ── CPU usage history (simulated if no cpuUsage field) ─── */
-  const usage = data.cpuUsage ?? (Math.random() * 40 + 10);
-  cpuChart.data.datasets[0].data.shift();
-  cpuChart.data.datasets[0].data.push(usage);
-  cpuChart.update('none');
-
-  /* ── Timestamp ───────────────────────────────────────────── */
-  document.getElementById('last-update').textContent =
-    new Date().toLocaleTimeString('en-GB');
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   WebSocket connection
-   The server should send JSON matching the shape above.
-═══════════════════════════════════════════════════════════════ */
-let ws = null;
-let wsRetryTimer = null;
-
-function connectWebSocket() {
-  const url = `ws://${location.host}/ws`;
-  ws = new WebSocket(url);
-
-  ws.onopen = () => {
-    console.log('[WS] Connected');
-    const el = document.getElementById('footer-ws');
-    el.innerHTML = '<span class="dot" style="background:var(--accent-green);"></span> WebSocket: connected';
-  };
-
-  ws.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      updateDashboard(data);
-    } catch(e) {
-      console.warn('[WS] Invalid JSON:', e);
+  /* Processes */
+  if (data.processes) {
+    const procs = data.processes;
+    document.getElementById('proc-badge').textContent = procs.length + ' processes';
+    const tbody = document.getElementById('proc-table-body');
+    tbody.innerHTML = '';
+    if (!procs.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">No processes</td></tr>';
+    } else {
+      procs.forEach(p => {
+        const cpu = typeof p.percCPU === 'number' ? p.percCPU.toFixed(1) : (p.percCPU ?? '–');
+        const ram = typeof p.percRAM === 'number' ? p.percRAM.toFixed(1) : (p.percRAM ?? '–');
+        const cpuColor = parseFloat(cpu) > 50 ? 'var(--accent-red)' : parseFloat(cpu) > 20 ? 'var(--accent-orange)' : 'var(--accent-green)';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:var(--accent-blue);">${p.user    ?? '–'}</td>
+          <td style="font-variant-numeric:tabular-nums;">${p.pid ?? '–'}</td>
+          <td><span style="color:${cpuColor};font-weight:600;">${cpu}%</span></td>
+          <td>${ram}%</td>
+          <td style="color:var(--text-muted);">${p.start   ?? '–'}</td>
+          <td style="color:var(--text-muted);">${p.time    ?? '–'}</td>
+          <td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;">${p.command ?? '–'}</td>`;
+        tbody.appendChild(tr);
+      });
     }
+  }
+
+  /* Disks */
+  if (data.disks) {
+    const grid = document.getElementById('disk-grid');
+    grid.innerHTML = '';
+    if (!data.disks.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);">No disks found</div>';
+    } else {
+      data.disks.forEach(d => {
+        const pct = parseFloat(d.use) || 0;
+        const barCls = pct > 90 ? 'red' : pct > 70 ? 'orange' : 'blue';
+        const badgeCls = pct > 90 ? 'badge-red' : pct > 70 ? 'badge-orange' : 'badge-blue';
+        const card = document.createElement('div');
+        card.className = 'disk-card';
+        card.innerHTML = `
+          <div class="disk-card-header">
+            <div class="disk-card-icon">💾</div>
+            <div>
+              <div class="disk-card-name">${d.mountedOn  ?? '–'}</div>
+              <div class="disk-card-fs">${d.fileSystem ?? '–'}</div>
+            </div>
+            <span class="badge ${badgeCls}" style="margin-left:auto;">${d.use ?? '–'}</span>
+          </div>
+          <div class="progress-label"><span>Usage</span><span>${d.used ?? '–'} / ${d.size ?? '–'}</span></div>
+          <div class="progress-track">
+            <div class="progress-fill ${barCls}" style="width:${pct}%"></div>
+          </div>
+          <div class="disk-stats">
+            <div><div class="disk-stat-label">Size</div><div class="disk-stat-value">${d.size      ?? '–'}</div></div>
+            <div><div class="disk-stat-label">Used</div><div class="disk-stat-value">${d.used      ?? '–'}</div></div>
+            <div><div class="disk-stat-label">Free</div><div class="disk-stat-value">${d.available ?? '–'}</div></div>
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
+  }
+
+  /* CPU history */
+  if (data.cpuUsage != null) {
+    cpuChart.data.datasets[0].data.shift();
+    cpuChart.data.datasets[0].data.push(data.cpuUsage);
+    cpuChart.update('none');
+  }
+
+  document.getElementById('last-update').textContent = new Date().toLocaleTimeString('en-GB');
+}
+
+/* ── Sidebar navigation ────────────────────────────────── */
+const SECTION_LABELS = {
+  'section-overview':  'Overview',
+  'section-cpu':       'CPU',
+  'section-ram':       'Memory',
+  'section-network':   'Network',
+  'section-processes': 'Processes',
+  'section-disks':     'Disks',
+};
+
+document.querySelectorAll('.sidebar-btn[data-target]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const el = document.getElementById(btn.dataset.target);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+/* Scroll-spy: update active button & topbar title */
+const content = document.getElementById('content');
+const sectionEls = Object.keys(SECTION_LABELS).map(id => document.getElementById(id)).filter(Boolean);
+
+content.addEventListener('scroll', () => {
+  let active = sectionEls[0];
+  sectionEls.forEach(el => {
+    if (el.offsetTop - content.scrollTop <= 60) active = el;
+  });
+  document.querySelectorAll('.sidebar-btn[data-target]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.target === active.id);
+  });
+  document.getElementById('topbar-section').textContent = '/ ' + (SECTION_LABELS[active.id] || '');
+}, { passive: true });
+
+/* ── SSE ───────────────────────────────────────────────── */
+let sse = null;
+
+function connectSSE() {
+  sse = new EventSource('/metrics');
+
+  sse.onopen = () => {
+    document.getElementById('footer-sse').innerHTML =
+      '<span class="dot" style="background:var(--accent-green);"></span> SSE: connected';
   };
 
-  ws.onerror = () => console.warn('[WS] Error');
+  sse.onmessage = e => {
+    try { updateDashboard(JSON.parse(e.data)); }
+    catch(err) { console.warn('[SSE] bad JSON', err); }
+  };
 
-  ws.onclose = () => {
-    console.warn('[WS] Disconnected, retrying in 3s…');
-    const el = document.getElementById('footer-ws');
-    el.innerHTML = '<span class="dot" style="background:var(--accent-red);"></span> WebSocket: reconnecting…';
-    wsRetryTimer = setTimeout(connectWebSocket, 3000);
+  sse.onerror = () => {
+    document.getElementById('footer-sse').innerHTML =
+      '<span class="dot" style="background:var(--accent-red);"></span> SSE: reconnecting…';
   };
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Manual Refresh (HTTP fallback while WebSocket is not ready)
-═══════════════════════════════════════════════════════════════ */
-function refreshData() {
-  fetch('/api/metrics')
-    .then(r => r.json())
-    .then(updateDashboard)
-    .catch(() => {
-      /* WebSocket not ready yet — show mock data for demo */
-      updateDashboard(MOCK_DATA);
-    });
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Mock data — replace with real data from C++ server
-═══════════════════════════════════════════════════════════════ */
+/* ── Mock data ─────────────────────────────────────────── */
 const MOCK_DATA = {
   cpu: { architecture: "x86_64", cores: 8, vendor: "GenuineIntel" },
   ram: { total: "15.5Gi", used: "4.2Gi", buffCache: "2.1Gi", available: "9.2Gi" },
   connections: [
-    { protocol:"TCP", serverAddress:"0.0.0.0",   serverPort:"8080", clientAddress:"0.0.0.0", clientPort:"*", state:"LISTEN",      pidProgram:"12345/app" },
-    { protocol:"TCP", serverAddress:"127.0.0.1",  serverPort:"5432", clientAddress:"0.0.0.0", clientPort:"*", state:"LISTEN",      pidProgram:"987/postgres" },
-    { protocol:"TCP", serverAddress:"0.0.0.0",   serverPort:"22",   clientAddress:"0.0.0.0", clientPort:"*", state:"LISTEN",      pidProgram:"1/sshd" },
-    { protocol:"UDP", serverAddress:"0.0.0.0",   serverPort:"68",   clientAddress:"0.0.0.0", clientPort:"*", state:"",            pidProgram:"345/dhclient" },
-    { protocol:"TCP", serverAddress:"127.0.0.1",  serverPort:"8080", clientAddress:"127.0.0.1", clientPort:"54321", state:"ESTABLISHED", pidProgram:"12345/app" },
+    { protocol:"TCP", serverAddress:"0.0.0.0",   serverPort:"8080", clientAddress:"0.0.0.0",   clientPort:"*",     state:"LISTEN",      pidProgram:"12345/app" },
+    { protocol:"TCP", serverAddress:"127.0.0.1", serverPort:"5432", clientAddress:"0.0.0.0",   clientPort:"*",     state:"LISTEN",      pidProgram:"987/postgres" },
+    { protocol:"TCP", serverAddress:"0.0.0.0",   serverPort:"22",   clientAddress:"0.0.0.0",   clientPort:"*",     state:"LISTEN",      pidProgram:"1/sshd" },
+    { protocol:"UDP", serverAddress:"0.0.0.0",   serverPort:"68",   clientAddress:"0.0.0.0",   clientPort:"*",     state:"",            pidProgram:"345/dhclient" },
+    { protocol:"TCP", serverAddress:"127.0.0.1", serverPort:"8080", clientAddress:"127.0.0.1", clientPort:"54321", state:"ESTABLISHED", pidProgram:"12345/app" },
+  ],
+  processes: [
+    { user:"root",     pid:1,    percCPU:0.0,  percRAM:0.1, start:"May28", time:"0:05", command:"systemd --system --deserialize 31" },
+    { user:"fred",     pid:1234, percCPU:2.3,  percRAM:1.2, start:"10:21", time:"0:12", command:"./app_monitor" },
+    { user:"postgres", pid:987,  percCPU:0.5,  percRAM:3.4, start:"May27", time:"2:40", command:"postgres -D /var/lib/pgsql/data" },
+    { user:"sshd",     pid:1001, percCPU:0.0,  percRAM:0.1, start:"May28", time:"0:00", command:"sshd: /usr/sbin/sshd -D [listener]" },
+    { user:"fred",     pid:5678, percCPU:15.2, percRAM:4.5, start:"11:00", time:"0:45", command:"npm run dev -- --port 3000" },
+  ],
+  disks: [
+    { fileSystem:"/dev/sda1", size:"100G", used:"42G",  available:"58G",  use:"42%", mountedOn:"/" },
+    { fileSystem:"/dev/sdb1", size:"500G", used:"213G", available:"287G", use:"43%", mountedOn:"/data" },
+    { fileSystem:"tmpfs",     size:"7.8G", used:"0",    available:"7.8G", use:"0%",  mountedOn:"/dev/shm" },
   ]
 };
 
-/* ═══════════════════════════════════════════════════════════════
-   Init
-═══════════════════════════════════════════════════════════════ */
-// Load mock data immediately for visual feedback
+function refreshData() { updateDashboard(MOCK_DATA); }
+
+/* ── Init ──────────────────────────────────────────────── */
 updateDashboard(MOCK_DATA);
 
-// Simulate CPU usage animation until real WebSocket data arrives
 setInterval(() => {
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
-    const fakeUsage = Math.random() * 35 + 8;
+  if (!sse || sse.readyState !== EventSource.OPEN) {
     cpuChart.data.datasets[0].data.shift();
-    cpuChart.data.datasets[0].data.push(fakeUsage);
+    cpuChart.data.datasets[0].data.push(Math.random() * 35 + 8);
     cpuChart.update('none');
   }
 }, 1000);
 
-// Try WebSocket
-connectWebSocket();
+connectSSE();
 </script>
 
 </body>

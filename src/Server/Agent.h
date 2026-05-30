@@ -4,7 +4,7 @@
 #include "../includeClass.h"
 #include "../Model/SystemMetrics.h"
 #include "../Utility/ManageString.h"
-#include "../LogPrint/Logint.h"
+// #include "../LogPrint/Logint.h"
 
 class Agent
 {

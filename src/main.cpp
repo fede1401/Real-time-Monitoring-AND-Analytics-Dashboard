@@ -4,16 +4,19 @@
 #include <iostream>
 #include <cstdlib>
 #include "Server/listener.h"
+#include "Server/Server.h"
 
 int main(){
     std::cout << "Listing files:\n";
     system("ls");
 
-    Listener* listener = new Listener("127.0.0.1", 8080, Protocol::TCP);
+    // Listener* listener = new Listener("127.0.0.1", 8080, Protocol::TCP);
 
-    listener->receiveData();
+    // listener->receiveData();
 
-    delete listener;
+    // delete listener;
+
+    Server server = Server();
 }
 
 #endif

@@ -5,7 +5,7 @@
 
 enum Methods
 {
-    GET, POST, DELETE, PUT, UNKWOWN
+    GET, POST, DELETE_HTTP, PUT, UNKWOWN
 };
 
 class Request
@@ -47,7 +47,7 @@ public:
             return POST;
 
         else if (meth == "DELETE")
-            return DELETE;
+            return DELETE_HTTP;
 
         else if (meth == "PUT")
             return PUT;

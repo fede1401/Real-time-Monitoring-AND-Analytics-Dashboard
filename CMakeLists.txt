@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Eseguibile
-add_executable(app src/main.cpp
+add_executable(${PROJECT_NAME} src/main.cpp
     src/Server/listener.h src/Server/listener.cpp
     src/common.h
     src/Parser/Marshal.h src/Parser/Marshal.cpp
@@ -18,4 +18,12 @@ add_executable(app src/main.cpp
     src/Model/SystemMetrics.h
     src/Utility/ManageString.h src/Utility/ManageString.cpp
     src/includeClass.h
-    src/LogPrint/Logint.h src/LogPrint/Logint.cpp)
+    src/LogPrint/Logint.h src/LogPrint/Logint.cpp
+    src/Server/Server.h src/Server/Server.cpp
+    )
+
+target_include_directories(${PROJECT_NAME} PRIVATE third_party)
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    WEB_ROOT="${CMAKE_SOURCE_DIR}/src/web"
+)

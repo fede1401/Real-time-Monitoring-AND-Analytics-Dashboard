@@ -3,7 +3,7 @@ build/
 Build/
 
 # CMake user files
-CMakeLists.txt.user
+CMakeLists.txt.*
 
 # Compiled object files
 *.o
